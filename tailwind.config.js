@@ -167,14 +167,21 @@ module.exports = {
           primary: 'rgb(var(--color-indicator-primary)/<alpha-value>)',
           info: 'rgb(var(--color-indicator-info)/<alpha-value>)',
           error: 'rgb(var(--color-indicator-error)/<alpha-value>)'
-        }
+        },
+        bgColor: '#171719',
+        gray: '#222329',
+        gray2: '#696B6F',
+        textColor: '#ffffff',
+        desc: '#e6e6e6',
+        blue: '#3618e0b3',
+        white: '#fafafa'
       },
       fontFamily: {
-        Poppins: ['Poppins-Regular'],
-        PoppinsBold: ['Poppins-Bold'],
-        PoppinsItalic: ['Poppins-Italic'],
-        PoppinsMedium: ['Poppins-Medium'],
-        PoppinsSemiBold: ['Poppins-SemiBold']
+        Poppins: ['Poppins-Regular', 'sans-serif'],
+        PoppinsBold: ['Poppins-Bold', 'sans-serif'],
+        PoppinsItalic: ['Poppins-Italic', 'sans-serif'],
+        PoppinsMedium: ['Poppins-Medium', 'sans-serif'],
+        PoppinsSemiBold: ['Poppins-SemiBold', 'sans-serif']
       },
       fontWeight: {
         extrablack: '950'

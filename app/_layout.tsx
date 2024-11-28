@@ -11,11 +11,11 @@ SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    PoppinsBold: require('../assets/fonts/Poppins-Bold.ttf'),
-    PoppinsRegular: require('../assets/fonts/Poppins-Regular.ttf'),
-    PoppinsMedium: require('../assets/fonts/Poppins-Medium.ttf'),
-    PoppinsItalic: require('../assets/fonts/Poppins-Italic.ttf'),
-    PoppinsSemibold: require('../assets/fonts/Poppins-SemiBold.ttf')
+    'Poppins-Bold': require('../assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Regular': require('../assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Medium': require('../assets/fonts/Poppins-Medium.ttf'),
+    'Poppins-Italic': require('../assets/fonts/Poppins-Italic.ttf'),
+    'Poppins-Semibold': require('../assets/fonts/Poppins-SemiBold.ttf')
   })
 
   useEffect(() => {
