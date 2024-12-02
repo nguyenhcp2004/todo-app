@@ -15,6 +15,7 @@ import { Avatar, AvatarFallbackText, AvatarGroup } from '@/components/ui/avatar'
 import { AddIcon, EditIcon, Icon } from '@/components/ui/icon'
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button'
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress'
+import { router } from 'expo-router'
 
 const avatars = [
   {
@@ -49,7 +50,7 @@ const remainingCount = extraAvatars.length
 
 export default function HomeScreen() {
   return (
-    <Box className='flex-1 bg-transparent'>
+    <Box className='flex-1'>
       <Container>
         <SectionComponent>
           <Box className='flex flex-row justify-between items-center'>
@@ -258,8 +259,13 @@ export default function HomeScreen() {
           </Box>
         </SectionComponent>
       </Container>
-      <Box className='absolute bottom-0 right-0 left-0 flex items-center justify-center p-5'>
-        <Button className='bg-[#FF7F50] p-3 rounded-3xl w-[80%]'>
+      <Box className='absolute bottom-0 right-0 left-0 flex items-center justify-center p-5 z-1'>
+        <Button
+          onPress={() => {
+            router.push('/(root)/(tabs)/add-new-task')
+          }}
+          className='bg-blue p-3 rounded-3xl w-[80%] opacity-100'
+        >
           <TextComponent>Add new tasks</TextComponent>
           <ButtonIcon as={AddIcon} />
         </Button>
