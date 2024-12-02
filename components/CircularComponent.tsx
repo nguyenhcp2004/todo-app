@@ -7,11 +7,10 @@ interface Props {
   color?: string
   value: number
   maxValue?: number
-  radius?: number
 }
 
 const CircularComponent = (props: Props) => {
-  const { color, value, maxValue, radius } = props
+  const { color, value, maxValue } = props
   return (
     <AnimatedCircularProgress
       size={120}
@@ -19,10 +18,13 @@ const CircularComponent = (props: Props) => {
       fill={value}
       rotation={0}
       tintColor={colors.blue}
-      onAnimationComplete={() => console.log('onAnimationComplete')}
-      backgroundColor='#3d5875'
+      backgroundColor='#3C444A'
     >
-      {() => <Text className='text-textColor text-3xl'>{value}%</Text>}
+      {() => (
+        <Text className='text-textColor text-3xl font-PoppinsSemiBold'>
+          {value}%
+        </Text>
+      )}
     </AnimatedCircularProgress>
   )
 }

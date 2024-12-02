@@ -1,4 +1,4 @@
-import { Text, ScrollView, Platform } from 'react-native'
+import { ScrollView, Platform } from 'react-native'
 import { ReactNode } from 'react'
 
 interface Props {
