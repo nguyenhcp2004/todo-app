@@ -18,6 +18,7 @@ const CardImageComponent = (props: Props) => {
         className={`${
           color ? `bg-[${color}]` : 'bg-[rgba(113,77,217,0.9)]'
         } p-3 rounded-xl w-full h-f`}
+        style={{ backgroundColor: color ? color : 'rgba(113,77,217,0.9)' }}
       >
         {children}
       </View>
