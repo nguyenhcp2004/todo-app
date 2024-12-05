@@ -11,9 +11,10 @@ interface Props {
   back?: boolean
   right?: ReactNode
   children: ReactNode
+  isScroll?: boolean
 }
 const Container = (props: Props) => {
-  const { children, back, right, title } = props
+  const { children, back, right, title, isScroll } = props
   return (
     <View
       className={`flex flex-1 bg-bgColor p-2 ${
@@ -39,7 +40,11 @@ const Container = (props: Props) => {
           )}
         </Box>
       </Box>
-      <ScrollView>{children}</ScrollView>
+      {isScroll ? (
+        <ScrollView>{children}</ScrollView>
+      ) : (
+        <Box className='flex-1'>{children}</Box>
+      )}
     </View>
   )
 }
