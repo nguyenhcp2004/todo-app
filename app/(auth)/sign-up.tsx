@@ -18,15 +18,14 @@ import { Text } from 'react-native'
 import { LoginBody, LoginBodyType } from '@/schemaValidations/auth.schema'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, router } from 'expo-router'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { Link } from 'expo-router'
 import { auth } from '@/utils/firebaseConfig'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 
-const SignIn = () => {
+const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [errorText, setErrorText] = useState('')
-
+  const [isLoading, setIsLoading] = useState(false)
   const {
     control,
     handleSubmit,
@@ -44,18 +43,19 @@ const SignIn = () => {
   }
 
   const onSubmit = async (data: LoginBodyType) => {
-    await signInWithEmailAndPassword(auth, data.email, data.password)
-      .then((userCredential) => {
-        const user = userCredential.user
-        if (user) {
+    try {
+      await createUserWithEmailAndPassword(auth, data.email, data.password)
+        .then((userCredential) => {
+          const user = userCredential.user
+          if (user) {
+            console.log(user)
+          }
+        })
+        .catch((error) => {
           setIsLoading(false)
-        }
-        router.push('/(root)/(tabs)/home')
-      })
-      .catch((error) => {
-        setErrorText(error.message)
-        setIsLoading(false)
-      })
+          setErrorText(error.message)
+        })
+    } catch (error) {}
   }
 
   return (
@@ -63,7 +63,7 @@ const SignIn = () => {
       <SectionComponent className='flex-1 justify-center items-center'>
         <VStack className='w-full max-w-md p-4 space-y-4'>
           <TextComponent className='text-4xl font-PoppinsBold uppercase text-center'>
-            Login
+            Sign Up
           </TextComponent>
           <FormControl isInvalid={!!errors.email} className='mb-2'>
             <FormControlLabel>
@@ -155,14 +155,12 @@ const SignIn = () => {
             className='w-full mt-6 bg-blue rounded-md'
             onPress={handleSubmit(onSubmit)}
           >
-            <ButtonText>LOGIN</ButtonText>
+            <ButtonText>SIGN UP</ButtonText>
           </Button>
-          <Link href={'/(auth)/sign-up'} className='mt-4'>
+          <Link href={'/(auth)/sign-in'} className='mt-4'>
             <Text className='mt-4 text-sm text-textColor font-Poppins text-center'>
-              You don't have an account?{' '}
-              <TextComponent className='text-orange-400'>
-                Create an account
-              </TextComponent>
+              Already have an account?{' '}
+              <TextComponent className='text-orange-400'>Sign In</TextComponent>
             </Text>
           </Link>
         </VStack>
@@ -171,4 +169,4 @@ const SignIn = () => {
   )
 }
 
-export default SignIn
+export default SignUp

@@ -41,7 +41,7 @@ const Container = (props: Props) => {
         </Box>
       </Box>
       {isScroll ? (
-        <ScrollView>{children}</ScrollView>
+        <ScrollView style={{ flex: 1, flexGrow: 1 }}>{children}</ScrollView>
       ) : (
         <Box className='flex-1'>{children}</Box>
       )}

@@ -1,7 +1,12 @@
 import React from 'react'
-import { Stack } from 'expo-router'
+import { Redirect, Stack } from 'expo-router'
+import { useAuth } from '@/store'
 
 const Layout = () => {
+  const { isAuth } = useAuth()
+  if (!isAuth) {
+    return <Redirect href={'/(auth)/sign-in'} />
+  }
   return (
     <Stack>
       <Stack.Screen name='home' options={{ headerShown: false }} />

@@ -1,21 +1,10 @@
-import React, { useEffect, useState } from 'react'
 import { Redirect } from 'expo-router'
-import { auth } from '@/utils/firebaseConfig'
+import { useAuth } from '@/store'
 
 const Page = () => {
-  const [isLogin, setIsLogin] = useState(false)
+  const { isAuth } = useAuth()
 
-  useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        setIsLogin(true)
-      } else {
-        setIsLogin(false)
-      }
-    })
-  }, [])
-
-  if (!isLogin) {
+  if (!isAuth) {
     return <Redirect href={'/(auth)/sign-in'} />
   }
   return <Redirect href={'/(root)/(tabs)/home'} />

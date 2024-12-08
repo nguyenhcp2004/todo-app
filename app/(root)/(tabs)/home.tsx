@@ -16,6 +16,9 @@ import { AddIcon, EditIcon, Icon } from '@/components/ui/icon'
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button'
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress'
 import { router } from 'expo-router'
+import { auth } from '@/utils/firebaseConfig'
+import { HStack } from '@/components/ui/hstack'
+import { useAuth } from '@/store'
 
 const avatars = [
   {
@@ -49,9 +52,14 @@ const extraAvatars = avatars.slice(3)
 const remainingCount = extraAvatars.length
 
 export default function HomeScreen() {
+  const user = auth.currentUser
+  const { logout } = useAuth()
+  const handleLogout = async () => {
+    await logout()
+  }
   return (
     <Box className='flex-1'>
-      <Container>
+      <Container isScroll={true}>
         <SectionComponent>
           <Box className='flex flex-row justify-between items-center'>
             <MaterialCommunityIcons
@@ -67,10 +75,25 @@ export default function HomeScreen() {
           </Box>
         </SectionComponent>
         <SectionComponent>
-          <Text className='text-textColor text-sm'>Hi, Jason</Text>
-          <Text className='text-textColor text-xl font-PoppinsBold'>
-            Be Productive today
-          </Text>
+          <HStack className='justify-between items-center'>
+            <Box>
+              <Text className='text-textColor text-sm'>
+                Hi, {user?.email || 'user'}
+              </Text>
+              <Text className='text-textColor text-xl font-PoppinsBold'>
+                Be Productive today
+              </Text>
+            </Box>
+            <Box>
+              <TouchableOpacity onPress={handleLogout}>
+                <MaterialCommunityIcons
+                  name='logout'
+                  size={24}
+                  color={colors.text}
+                />
+              </TouchableOpacity>
+            </Box>
+          </HStack>
         </SectionComponent>
         <SectionComponent>
           <Input className='bg-gray' variant='outline' size='lg'>
@@ -264,9 +287,9 @@ export default function HomeScreen() {
           onPress={() => {
             router.push('/(root)/(tabs)/add-new-task')
           }}
-          className='bg-blue p-3 rounded-3xl w-[80%] opacity-100'
+          className='bg-blue p-3 rounded-3xl w-[80%] opacity-100 h-fit'
         >
-          <TextComponent>Add new tasks</TextComponent>
+          <ButtonText className='h-fit'>Add new task</ButtonText>
           <ButtonIcon as={AddIcon} />
         </Button>
       </Box>
