@@ -1,5 +1,5 @@
 import { GestureResponderEvent, Text } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Container from '@/components/Container'
 import { VStack } from '@/components/ui/vstack'
 import {
@@ -19,6 +19,10 @@ import { colors } from '@/constants/color'
 import DateTimePickerComponent from '@/components/DateTimePickerComponent'
 import { TaskModel } from '@/models/TaskModel'
 import { HStack } from '@/components/ui/hstack'
+import { getDocs } from 'firebase/firestore'
+import { usersRef } from '@/utils/firebaseConfig'
+import DropDownPicker from '@/components/DropDownPicker'
+import { SelectModel } from '@/models/SelectModel'
 
 const initValue: TaskModel = {
   title: '',
@@ -34,12 +38,32 @@ const AddNewTask = () => {
   const [isInvalid, setIsInvalid] = React.useState(false)
   const [inputValue, setInputValue] = React.useState('')
   const [taskDetail, setTaskDetail] = useState<TaskModel>(initValue)
+  const [users, setUsers] = useState<SelectModel[]>([])
 
-  const handleChangeValue = (field: string, value: string | Date) => {
+  useEffect(() => {
+    handleGetAllUsers()
+  }, [])
+  const handleGetAllUsers = async () => {
+    try {
+      const usersSnapshot = await getDocs(usersRef)
+      const usersList = usersSnapshot.docs.map((doc) => doc.data())
+      const data: SelectModel[] = []
+      usersList.forEach((element) => {
+        data.push({ label: element.name, value: element.id })
+      })
+      setUsers(data)
+    } catch (error) {
+      console.error('Error getting users:', error)
+    }
+  }
+
+  const handleChangeValue = (
+    field: string,
+    value: string | Date | string[]
+  ) => {
     const item: any = { ...taskDetail }
 
     item[`${field}`] = value
-
     setTaskDetail(item)
   }
 
@@ -183,6 +207,11 @@ const AddNewTask = () => {
               </FormControlError>
             </FormControl>
           </HStack>
+          <DropDownPicker
+            onSelect={(data) => handleChangeValue('uids', data)}
+            selected={taskDetail.uids}
+            items={users}
+          />
           <Button
             className='w-fit self-center mt-4 bg-transparent'
             size='lg'
