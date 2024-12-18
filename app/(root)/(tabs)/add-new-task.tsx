@@ -208,6 +208,7 @@ const AddNewTask = () => {
             </FormControl>
           </HStack>
           <DropDownPicker
+            multible
             onSelect={(data) => handleChangeValue('uids', data)}
             selected={taskDetail.uids}
             items={users}

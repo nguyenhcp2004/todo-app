@@ -1,4 +1,4 @@
-import { View, Text, FlatList } from 'react-native'
+import { View, Text, FlatList, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { SelectModel } from '@/models/SelectModel'
 import {
@@ -31,6 +31,7 @@ import TextComponent from '@/components/TextComponent'
 import { Box } from '@/components/ui/box'
 import { HStack } from '@/components/ui/hstack'
 import { colors } from '@/constants/color'
+import { ScrollView } from 'react-native-reanimated/lib/typescript/Animated'
 
 interface Props {
   title?: string
@@ -82,8 +83,9 @@ const DropDownPicker = (props: Props) => {
   }
   const handleRemoveItemSelected = (index: number) => {
     if (selected) {
-      selected.splice(index, 1)
-      onSelect(selected)
+      const newSelected = [...selected]
+      newSelected.splice(index, 1)
+      onSelect(newSelected)
     }
   }
 
@@ -91,61 +93,62 @@ const DropDownPicker = (props: Props) => {
     const item = items.find((element) => element.value === id)
     return (
       item && (
-        <HStack
-          className='items-center justify-between my-1 p-2 border rounded-full border-gray2 mb-2 bg-slate-100'
-          onTouchStart={() => handleRemoveItemSelected(index)}
-        >
-          <Text className='text-textColor pr-1'>{item.label}</Text>
-          <Icon as={CloseIcon} size='md' color={colors.text} />
-        </HStack>
+        <TouchableOpacity onPress={() => handleRemoveItemSelected(index)}>
+          <HStack className='items-center justify-between my-1 mx-1 p-2 border rounded-full border-gray2 mb-2 '>
+            <Text className='text-textColor pr-1'>{item.label}</Text>
+
+            <Icon as={CloseIcon} size='md' color={colors.text} />
+          </HStack>
+        </TouchableOpacity>
       )
     )
   }
   return (
-    <>
-      <FormControl
-        size='lg'
-        isDisabled={false}
-        isReadOnly={false}
-        isRequired={false}
-        className='mb-2 '
-        onTouchStart={() => setShowDrawer(true)}
-      >
-        <FormControlLabel>
-          <FormControlLabelText className='text-textColor '>
-            Member
-          </FormControlLabelText>
-        </FormControlLabel>
-        <Input
-          className={`h-fit my-1 ${selected ? 'p-1' : 'p-2'}`}
-          variant='outline'
-          size={'xl'}
+    <View>
+      <TouchableOpacity onPress={() => setShowDrawer(true)}>
+        <FormControl
+          size='lg'
+          isDisabled={false}
+          isReadOnly={false}
+          isRequired={false}
+          className='mb-2 '
         >
-          {selected && selected.length > 0 ? (
-            <HStack>
-              {selected.map((id, index) => renderSelectedItem(id, index))}
-            </HStack>
-          ) : (
-            <>
-              <InputField
-                className='text-textColor'
-                type='text'
-                placeholder='Search'
-                value={''}
-              />
-              <InputSlot className='pr-1'>
-                <InputIcon as={ChevronDownIcon} />
-              </InputSlot>
-            </>
-          )}
-        </Input>
-        <FormControlError>
-          <FormControlErrorIcon as={AlertCircleIcon} />
-          <FormControlErrorText>
-            Atleast 6 characters are required.
-          </FormControlErrorText>
-        </FormControlError>
-      </FormControl>
+          <FormControlLabel>
+            <FormControlLabelText className='text-textColor '>
+              Member
+            </FormControlLabelText>
+          </FormControlLabel>
+          <Input
+            className={`h-fit my-1 ${selected ? 'p-1' : 'p-2'}`}
+            variant='outline'
+            size={'xl'}
+          >
+            {selected && selected.length > 0 ? (
+              <HStack>
+                {selected.map((id, index) => renderSelectedItem(id, index))}
+              </HStack>
+            ) : (
+              <>
+                <InputField
+                  className='text-textColor'
+                  type='text'
+                  placeholder='Search'
+                  value={''}
+                />
+                <InputSlot className='pr-1'>
+                  <InputIcon as={ChevronDownIcon} />
+                </InputSlot>
+              </>
+            )}
+          </Input>
+          <FormControlError>
+            <FormControlErrorIcon as={AlertCircleIcon} />
+            <FormControlErrorText>
+              Atleast 6 characters are required.
+            </FormControlErrorText>
+          </FormControlError>
+        </FormControl>
+      </TouchableOpacity>
 
       <Drawer
         isOpen={showDrawer}
@@ -182,6 +185,7 @@ const DropDownPicker = (props: Props) => {
           </DrawerHeader>
           <DrawerBody>
             <FlatList
+              nestedScrollEnabled={true}
               showsVerticalScrollIndicator={false}
               style={{ flex: 1 }}
               data={searckKey ? results : items}
@@ -228,7 +232,7 @@ const DropDownPicker = (props: Props) => {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-    </>
+    </View>
   )
 }
 
