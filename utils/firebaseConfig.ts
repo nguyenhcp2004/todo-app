@@ -23,3 +23,4 @@ export const auth = initializeAuth(app, {
 export const db = getFirestore(app)
 
 export const usersRef = collection(db, 'users')
+export const taskRef = collection(db, 'tasks')

@@ -2,7 +2,7 @@ import Container from '@/components/Container'
 import SectionComponent from '@/components/SectionComponent'
 import { Box } from '@/components/ui/box'
 import { Input, InputField, InputSlot } from '@/components/ui/input'
-import { Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { colors } from '@/constants/color'
 import Feather from '@expo/vector-icons/Feather'
@@ -12,13 +12,18 @@ import TextComponent from '@/components/TextComponent'
 import { Grid, GridItem } from '@/components/ui/grid'
 import CardImageComponent from '@/components/CardImageComponent'
 import { Avatar, AvatarFallbackText, AvatarGroup } from '@/components/ui/avatar'
-import { AddIcon, EditIcon, Icon } from '@/components/ui/icon'
+import { AddIcon, EditIcon } from '@/components/ui/icon'
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button'
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress'
 import { router } from 'expo-router'
-import { auth } from '@/utils/firebaseConfig'
+import { auth, taskRef } from '@/utils/firebaseConfig'
 import { HStack } from '@/components/ui/hstack'
 import { useAuth } from '@/store'
+import { getDocs, limitToLast, orderBy, query } from 'firebase/firestore'
+import { useEffect, useState } from 'react'
+import React from 'react'
+import { TaskModel } from '@/models/TaskModel'
+import ProgressBarComponent from '@/components/ProgressBarComponent'
 
 const avatars = [
   {
@@ -52,10 +57,43 @@ const extraAvatars = avatars.slice(3)
 const remainingCount = extraAvatars.length
 
 export default function HomeScreen() {
+  const [isLoading, setIsLoading] = useState(false)
+  const [tasks, setTasks] = useState<TaskModel[]>([])
   const user = auth.currentUser
   const { logout } = useAuth()
   const handleLogout = async () => {
     await logout()
+  }
+
+  useEffect(() => {
+    getNewTasks()
+  }, [])
+
+  const getNewTasks = async () => {
+    setIsLoading(true)
+    try {
+      const tasksQuery = query(
+        taskRef,
+        orderBy('dueDate', 'desc'),
+        limitToLast(3)
+      )
+      const tasksSnapshot = await getDocs(tasksQuery)
+      const tasksList = tasksSnapshot.docs.map((doc) => {
+        const data = doc.data() as TaskModel
+        return {
+          ...data,
+          dueDate: data.dueDate ? data.dueDate.toDate() : null, // Convert Firestore Timestamp to Date
+          start: data.start ? data.start.toDate() : null, // Convert Firestore Timestamp to Date
+          end: data.end ? data.end.toDate() : null // Convert Firestore Timestamp to Date
+        }
+      })
+      setTasks(tasksList)
+      setIsLoading(false)
+      console.log(tasksList)
+    } catch (error) {
+      setIsLoading(false)
+      console.error('Error getting tasks:', error)
+    }
   }
   return (
     <Box className='flex-1'>
@@ -119,94 +157,36 @@ export default function HomeScreen() {
             </Box>
           </Box>
         </SectionComponent>
-        <SectionComponent>
-          <Grid
-            className='justify-between gap-x-[-15px]'
-            _extra={{
-              className: 'grid-cols-12'
-            }}
-          >
-            <GridItem
-              className='rounded-md'
+        {isLoading ? (
+          <ActivityIndicator />
+        ) : tasks.length > 0 ? (
+          <SectionComponent>
+            <Grid
+              className='justify-between gap-x-[-15px]'
               _extra={{
-                className: 'col-span-6'
+                className: 'grid-cols-12'
               }}
             >
-              <CardImageComponent>
-                <Button
-                  size='lg'
-                  className=' flex flex-row rounded-full w-12 h-12 items-center justify-center bg-[rgba(0,0,0,0.2)]'
-                >
-                  <ButtonIcon as={EditIcon} />
-                </Button>
-
-                <TextComponent className='text-xl font-PoppinsBold'>
-                  UX Design
-                </TextComponent>
-                <TextComponent>Task management mobile app</TextComponent>
-                <Box className='ml-3 mt-8 mb-2 flex flex-row items-center justify-start'>
-                  <AvatarGroup className='items-center'>
-                    {avatars.slice(0, 3).map((avatar, index) => {
-                      return (
-                        <Avatar
-                          key={index}
-                          size='sm'
-                          className={
-                            'border-2 border-outline-0 ' + avatar.color
-                          }
-                        >
-                          <AvatarFallbackText className='text-white'>
-                            {avatar.alt}
-                          </AvatarFallbackText>
-                        </Avatar>
-                      )
-                    })}
-                    <Avatar size='sm'>
-                      <AvatarFallbackText>
-                        {'+ ' + remainingCount + ''}
-                      </AvatarFallbackText>
-                    </Avatar>
-                  </AvatarGroup>
-                </Box>
-
-                <Box className='w-full mb-12'>
-                  <Progress
-                    value={40}
-                    size='md'
-                    orientation='horizontal'
-                    className='bg-[rgba(0,0,0,0.4)]'
-                  >
-                    <ProgressFilledTrack className='bg-[#0aacff]' />
-                  </Progress>
-                  <Box className='flex flex-row items-center justify-between w-full'>
-                    <TextComponent>Progress</TextComponent>
-                    <TextComponent className='font-PoppinsBold'>
-                      40%
-                    </TextComponent>
-                  </Box>
-                </Box>
-                <TextComponent>Due, 2023 Match 03</TextComponent>
-              </CardImageComponent>
-            </GridItem>
-            <GridItem
-              className='rounded-md'
-              _extra={{
-                className: 'col-span-5'
-              }}
-            >
-              <Box className='flex flex-col justify-between items-center gap-2'>
-                <Box className='rounded'>
-                  <CardImageComponent color='rgba(33,150,243,0.9)'>
+              <GridItem
+                className='rounded-md'
+                _extra={{
+                  className: 'col-span-6'
+                }}
+              >
+                {tasks[0] && (
+                  <CardImageComponent>
                     <Button
                       size='lg'
                       className=' flex flex-row rounded-full w-12 h-12 items-center justify-center bg-[rgba(0,0,0,0.2)]'
                     >
                       <ButtonIcon as={EditIcon} />
                     </Button>
+
                     <TextComponent className='text-xl font-PoppinsBold'>
-                      API Payment
+                      {tasks[0].title}
                     </TextComponent>
-                    <Box className='ml-3 my-3 flex flex-row items-center justify-start'>
+                    <TextComponent>{tasks[0].description}</TextComponent>
+                    <Box className='ml-3 mt-8 mb-2 flex flex-row items-center justify-start'>
                       <AvatarGroup className='items-center'>
                         {avatars.slice(0, 3).map((avatar, index) => {
                           return (
@@ -230,42 +210,91 @@ export default function HomeScreen() {
                         </Avatar>
                       </AvatarGroup>
                     </Box>
-                    <Box className='w-full'>
-                      <Progress
-                        value={40}
-                        size='sm'
-                        orientation='horizontal'
-                        className='bg-[rgba(0,0,0,0.4)]'
-                      >
-                        <ProgressFilledTrack className='bg-[#a2f068]' />
-                      </Progress>
-                      <Box className='flex flex-row items-center justify-between w-full'>
-                        <TextComponent>Progress</TextComponent>
-                        <TextComponent className='font-PoppinsBold'>
-                          40%
+                    {tasks[0].progress && (
+                      <ProgressBarComponent
+                        percent={Number(tasks[0].progress)}
+                      />
+                    )}
+                    <TextComponent>{tasks[0].dueDate.toString()}</TextComponent>
+                  </CardImageComponent>
+                )}
+              </GridItem>
+              <GridItem
+                className='rounded-md'
+                _extra={{
+                  className: 'col-span-5'
+                }}
+              >
+                <Box className='flex flex-col justify-between items-center gap-2'>
+                  {tasks[1] && (
+                    <Box className='rounded'>
+                      <CardImageComponent color='rgba(33,150,243,0.9)'>
+                        <Button
+                          size='lg'
+                          className=' flex flex-row rounded-full w-12 h-12 items-center justify-center bg-[rgba(0,0,0,0.2)]'
+                        >
+                          <ButtonIcon as={EditIcon} />
+                        </Button>
+                        <TextComponent className='text-xl font-PoppinsBold'>
+                          {tasks[1].title}
                         </TextComponent>
-                      </Box>
+                        <Box className='ml-3 my-3 flex flex-row items-center justify-start'>
+                          <AvatarGroup className='items-center'>
+                            {avatars.slice(0, 3).map((avatar, index) => {
+                              return (
+                                <Avatar
+                                  key={index}
+                                  size='sm'
+                                  className={
+                                    'border-2 border-outline-0 ' + avatar.color
+                                  }
+                                >
+                                  <AvatarFallbackText className='text-white'>
+                                    {avatar.alt}
+                                  </AvatarFallbackText>
+                                </Avatar>
+                              )
+                            })}
+                            <Avatar size='sm'>
+                              <AvatarFallbackText>
+                                {'+ ' + remainingCount + ''}
+                              </AvatarFallbackText>
+                            </Avatar>
+                          </AvatarGroup>
+                        </Box>
+                        {tasks[1].progress && (
+                          <ProgressBarComponent
+                            percent={Number(tasks[1].progress)}
+                            color='bg-[#a2f068]'
+                          />
+                        )}
+                      </CardImageComponent>
                     </Box>
-                  </CardImageComponent>
+                  )}
+                  {tasks[2] && (
+                    <Box className='rounded'>
+                      <CardImageComponent color='rgba(18,181,22,0.9)'>
+                        <Button
+                          size='lg'
+                          className=' flex flex-row rounded-full w-12 h-12 items-center justify-center bg-[rgba(0,0,0,0.2)]'
+                        >
+                          <ButtonIcon as={EditIcon} />
+                        </Button>
+                        <TextComponent className='text-xl font-PoppinsBold'>
+                          {tasks[2].title}
+                        </TextComponent>
+                        <TextComponent>{tasks[2].description}</TextComponent>
+                      </CardImageComponent>
+                    </Box>
+                  )}
                 </Box>
-                <Box className='rounded'>
-                  <CardImageComponent color='rgba(18,181,22,0.9)'>
-                    <Button
-                      size='lg'
-                      className=' flex flex-row rounded-full w-12 h-12 items-center justify-center bg-[rgba(0,0,0,0.2)]'
-                    >
-                      <ButtonIcon as={EditIcon} />
-                    </Button>
-                    <TextComponent className='text-xl font-PoppinsBold'>
-                      Update work
-                    </TextComponent>
-                    <TextComponent>Revision home page</TextComponent>
-                  </CardImageComponent>
-                </Box>
-              </Box>
-            </GridItem>
-          </Grid>
-        </SectionComponent>
+              </GridItem>
+            </Grid>
+          </SectionComponent>
+        ) : (
+          <></>
+        )}
+
         <SectionComponent>
           <TextComponent className='text-xl font-PoppinsBold'>
             Urgent tasks

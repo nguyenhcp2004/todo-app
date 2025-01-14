@@ -1,4 +1,10 @@
-import { GestureResponderEvent, Text } from 'react-native'
+import {
+  GestureResponderEvent,
+  Image,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Container from '@/components/Container'
 import { VStack } from '@/components/ui/vstack'
@@ -11,7 +17,7 @@ import {
   FormControlLabelText
 } from '@/components/ui/form-control'
 import { Input, InputField } from '@/components/ui/input'
-import { AlertCircleIcon } from '@/components/ui/icon'
+import { AlertCircleIcon, Icon, PaperclipIcon } from '@/components/ui/icon'
 import { Button, ButtonText } from '@/components/ui/button'
 import { Box } from '@/components/ui/box'
 import { Textarea, TextareaInput } from '@/components/ui/textarea'
@@ -19,14 +25,19 @@ import { colors } from '@/constants/color'
 import DateTimePickerComponent from '@/components/DateTimePickerComponent'
 import { TaskModel } from '@/models/TaskModel'
 import { HStack } from '@/components/ui/hstack'
-import { getDocs } from 'firebase/firestore'
-import { usersRef } from '@/utils/firebaseConfig'
+import { doc, getDocs, setDoc } from 'firebase/firestore'
+import { taskRef, usersRef } from '@/utils/firebaseConfig'
 import DropDownPicker from '@/components/DropDownPicker'
 import { SelectModel } from '@/models/SelectModel'
+import * as DocumentPicker from 'expo-document-picker'
+import TextComponent from '@/components/TextComponent'
+import { upload } from 'cloudinary-react-native'
+import { cld } from '@/libs/cloudinary'
+import { UploadApiResponse } from 'cloudinary-react-native/lib/typescript/src/api/upload/model/params/upload-params'
 
 const initValue: TaskModel = {
   title: '',
-  desctiption: '',
+  description: '',
   dueDate: new Date(),
   start: new Date(),
   end: new Date(),
@@ -39,14 +50,18 @@ const AddNewTask = () => {
   const [inputValue, setInputValue] = React.useState('')
   const [taskDetail, setTaskDetail] = useState<TaskModel>(initValue)
   const [users, setUsers] = useState<SelectModel[]>([])
+  const [images, setImages] = useState<string>('')
+  const [file, setFile] = useState<DocumentPicker.DocumentPickerResult | null>(
+    null
+  )
 
   useEffect(() => {
     handleGetAllUsers()
   }, [])
   const handleGetAllUsers = async () => {
     try {
-      const usersSnapshot = await getDocs(usersRef)
-      const usersList = usersSnapshot.docs.map((doc) => doc.data())
+      const usersSnapshot = (await getDocs(usersRef)).docChanges()
+      const usersList = usersSnapshot.map((doc) => doc.doc.data())
       const data: SelectModel[] = []
       usersList.forEach((element) => {
         data.push({ label: element.name, value: element.id })
@@ -67,7 +82,61 @@ const AddNewTask = () => {
     setTaskDetail(item)
   }
 
-  const handleSubmit = (e: GestureResponderEvent) => {}
+  const uploadImage = async (file: string) => {
+    const options = {
+      upload_preset: 'Default',
+      unsigned: true
+    }
+    return new Promise<UploadApiResponse | undefined>(
+      async (resolve, reject) => {
+        await upload(cld, {
+          file,
+          options: options,
+          callback: (error, response) => {
+            if (error) {
+              reject(error)
+            } else {
+              resolve(response)
+            }
+          }
+        })
+      }
+    )
+  }
+
+  const handlePickImage = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+        multiple: true
+      })
+
+      if (!result.canceled) {
+        setImages(result.assets[0].uri)
+      }
+    } catch (error) {
+      console.error('Error picking image:', error)
+    }
+  }
+
+  const handleSubmit = async () => {
+    try {
+      if (!images) return
+      const imageUrl = await uploadImage(images)
+      const data = {
+        ...taskDetail,
+        fileUrls: [imageUrl?.url]
+      }
+
+      const taskDocRef = doc(taskRef)
+      await setDoc(taskDocRef, data)
+      setTaskDetail(initValue)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   return (
     <Container back title='Add New Task'>
       <Box className='flex flex-row items-center justify-center'>
@@ -90,8 +159,8 @@ const AddNewTask = () => {
                 className='text-textColor'
                 type='text'
                 placeholder='Title of task'
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                value={taskDetail.title}
+                onChange={(e) => handleChangeValue('title', e.nativeEvent.text)}
               />
             </Input>
             <FormControlError>
@@ -107,17 +176,15 @@ const AddNewTask = () => {
                 Description
               </FormControlLabelText>
             </FormControlLabel>
-            <Textarea
-              size='md'
-              isReadOnly={false}
-              isInvalid={false}
-              isDisabled={false}
-              className='w-full rounded-2xl'
-            >
+            <Textarea size='md' className='w-full rounded-2xl'>
               <TextareaInput
                 className='color-textColor'
                 style={{ color: colors.text }}
                 placeholder='Your text goes here...'
+                value={taskDetail.description}
+                onChange={(e) =>
+                  handleChangeValue('description', e.nativeEvent.text)
+                }
               />
             </Textarea>
             <FormControlError>
@@ -168,8 +235,8 @@ const AddNewTask = () => {
                 </FormControlLabelText>
               </FormControlLabel>
               <DateTimePickerComponent
-                selected={taskDetail.dueDate}
-                onSelect={(val) => handleChangeValue('dueDate', val)}
+                selected={taskDetail.start}
+                onSelect={(val) => handleChangeValue('start', val)}
                 placeholder='Choice'
                 type='time'
               />
@@ -194,8 +261,8 @@ const AddNewTask = () => {
                 </FormControlLabelText>
               </FormControlLabel>
               <DateTimePickerComponent
-                selected={taskDetail.dueDate}
-                onSelect={(val) => handleChangeValue('dueDate', val)}
+                selected={taskDetail.end}
+                onSelect={(val) => handleChangeValue('end', val)}
                 placeholder='Choice'
                 type='time'
               />
@@ -213,12 +280,40 @@ const AddNewTask = () => {
             selected={taskDetail.uids}
             items={users}
           />
-          <Button
-            className='w-fit self-center mt-4 bg-transparent'
-            size='lg'
-            onPress={(e) => handleSubmit(e)}
+          <TouchableOpacity onPress={handlePickImage} style={{ marginTop: 3 }}>
+            <HStack className='w-fit items-center'>
+              <TextComponent className='text-lg font-PoppinsSemiBold w-[110px]'>
+                Attachments
+              </TextComponent>
+              <Icon className='text-typography-500' as={PaperclipIcon} />
+            </HStack>
+            {file?.assets &&
+              file?.assets.map((item) => (
+                <TextComponent className='text-md mr-2' key={item.name}>
+                  {item.name}
+                </TextComponent>
+              ))}
+          </TouchableOpacity>
+          <View
+            style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 16 }}
           >
-            <ButtonText className='color-cyan-600'>Save</ButtonText>
+            {images && (
+              <Image
+                source={{ uri: images }}
+                style={{
+                  width: 100,
+                  height: 100,
+                  marginRight: 8,
+                  marginBottom: 8
+                }}
+              />
+            )}
+          </View>
+          <Button
+            className='w-full self-center mt-4 bg-blue rounded-xl'
+            onPress={handleSubmit}
+          >
+            <ButtonText className='uppercase'>Save</ButtonText>
           </Button>
         </VStack>
       </Box>
